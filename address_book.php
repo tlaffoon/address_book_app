@@ -1,11 +1,23 @@
 <?php
 
-function readCSV($filename) {
-
+function readCSV($filename = './data/address-book.csv') {
+	$address_book = [];
+	$handle = fopen($filename, 'r');
+	while(!feof($handle)) {
+		$row = fgetcsv($handle);
+		if (!empty($row)) {
+			$address_book[] = $row;
+		}
+	}
+	return $address_book;
 }
 
-function writeCSV($filename) {
-
+function writeCSV($address_book, $filename = './data/address-book.csv') {
+	$handle = fopen($filename, 'w');
+	foreach ($address_book as $fields) {
+		fputcsv($handle, $fields);
+	}
+	fclose($handle);
 }
 
 function checkPOST($post) {
@@ -20,18 +32,31 @@ function checkPOST($post) {
 	return false;
 }
 
+function addEntry($entry, $array) {
+	$array[] = $entry;
+	return $array;
+}
+
+function removeEntry($entryID, $array) {
+	unset($array[$entryID]);
+	return array_values($array);
+}
+
 ?>
 
 <?php
 
-	$filename = './data/address-book.csv';
+	$address_book = readCSV();
+	// var_dump($address_book);
 	
-	$address_book = [];
-
 	if (checkPOST($_POST)) {
-		echo "POST good.";
-		$address_book[] = $_POST;
-		var_dump($address_book);
+		addEntry($_POST, $address_book);
+		writeCSV($address_book);
+	}
+
+	if (isset($_GET['remove'])) {
+	 	$address_book = removeEntry($_GET['remove'], $address_book);
+	 	writeCSV($address_book);
 	}
 
 
@@ -60,7 +85,7 @@ function checkPOST($post) {
 					<? foreach ($entry as $value) : ?>
 						<td><?= $value ?></td>
 					<? endforeach ?>
-					<td><?= "<a href=?remove{$key}> Remove </a>" ?></td>
+					<td><?= "<a href='?remove={$key}'> Remove </a>" ?></td>
 				</tr>
 			<? endforeach ?>
 
