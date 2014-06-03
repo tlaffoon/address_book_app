@@ -80,7 +80,7 @@ function removeEntry($entryID, $array) {
 			<? foreach ($address_book as $key => $entry) : ?>
 				<tr>
 					<? foreach ($entry as $value) : ?>
-						<td><?= htmlspecialchars(strip_tags($value))) ?></td>
+						<td><?= htmlspecialchars(strip_tags($value)) ?></td>
 					<? endforeach ?>
 					<td><?= "<a href='?remove={$key}'> Remove </a>" ?></td>
 				</tr>
