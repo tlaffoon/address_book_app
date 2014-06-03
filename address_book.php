@@ -32,11 +32,6 @@ function checkPOST($post) {
 	return false;
 }
 
-function addEntry($entry, $array) {
-	$array[] = $entry;
-	return $array;
-}
-
 function removeEntry($entryID, $array) {
 	unset($array[$entryID]);
 	return array_values($array);
@@ -47,10 +42,9 @@ function removeEntry($entryID, $array) {
 <?php
 
 	$address_book = readCSV();
-	// var_dump($address_book);
 	
 	if (checkPOST($_POST)) {
-		addEntry($_POST, $address_book);
+		$address_book[] = $_POST;
 		writeCSV($address_book);
 	}
 
