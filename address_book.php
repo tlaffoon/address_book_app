@@ -8,6 +8,11 @@ class AddressDataStore {
         $this->filename = $filename;
     }
 
+    function __destruct() 
+    {
+        // echo "Class Dismissed!";
+    }
+
     function readCSV() {
         $address_book = [];
         $handle = fopen($this->filename, 'r');
@@ -100,7 +105,6 @@ function removeEntry($entryID, $array) {
 	</table>
 
 	<hr>
-
 	<h3>Add Entry:</h3>
 		<form method="POST" action="">
 		<p>
