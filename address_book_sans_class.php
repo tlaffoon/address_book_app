@@ -9,11 +9,13 @@ function readCSV($filename = '../data/address-book.csv') {
     		$address_book[] = $row;
     	}
     }
+    $address_book = dedupe($address_book);
     return $address_book;    
 }
 
 function writeCSV($address_book, $filename = '../data/address-book.csv') {
     $handle = fopen($filename, 'w');
+    $address_book = dedupe($address_book);
     foreach ($address_book as $fields) {
     	fputcsv($handle, $fields);
     }
@@ -22,7 +24,6 @@ function writeCSV($address_book, $filename = '../data/address-book.csv') {
 
 function checkPOST($post) {
 	// check captured post data for all fields completed.
-
 	$required = array('first_name', 'last_name', 'email', 'tel', 'address', 'homepage');
 
 	foreach ($required as $field) {
@@ -31,8 +32,15 @@ function checkPOST($post) {
 				return false;
 			}
 	}
-
 	return true;
+}
+
+function dedupe($array) {
+	$new_array = array();
+	foreach ($array as $key => $value) {
+		$new_array[] = array_unique($value);
+	}
+	return $new_array;
 }
 
 function removeEntry($entryID, $array) {
@@ -81,7 +89,6 @@ function checkMIME() {
 	if (count($_FILES) == 1) {
 		if (checkUploadError() == false && checkMIME() == true) {
 			uploadFile();
-			//var_dump($_FILES);
 			$upload_array = readCSV("../data/{$_FILES['upload_file']['name']}");
 			$address_book = array_merge($address_book, $upload_array);
 			writeCSV($address_book);
