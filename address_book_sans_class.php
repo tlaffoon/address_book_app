@@ -9,13 +9,11 @@ function readCSV($filename = '../data/address-book.csv') {
     		$address_book[] = $row;
     	}
     }
-    $address_book = dedupe($address_book);
     return $address_book;    
 }
 
 function writeCSV($address_book, $filename = '../data/address-book.csv') {
     $handle = fopen($filename, 'w');
-    $address_book = dedupe($address_book);
     foreach ($address_book as $fields) {
     	fputcsv($handle, $fields);
     }
