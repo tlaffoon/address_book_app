@@ -1,23 +1,33 @@
 <?php
 
-function readCSV($filename = './data/address-book.csv') {
-	$address_book = [];
-	$handle = fopen($filename, 'r');
-	while(!feof($handle)) {
-		$row = fgetcsv($handle);
-		if (!empty($row)) {
-			$address_book[] = $row;
-		}
-	}
-	return $address_book;
-}
+class AddressDataStore {
 
-function writeCSV($address_book, $filename = './data/address-book.csv') {
-	$handle = fopen($filename, 'w');
-	foreach ($address_book as $fields) {
-		fputcsv($handle, $fields);
-	}
-	fclose($handle);
+    public $filename = '';
+
+    function __construct($filename = '') {
+        $this->filename = $filename;
+    }
+
+    function readCSV() {
+        $address_book = [];
+        $handle = fopen($this->filename, 'r');
+        while(!feof($handle)) {
+        	$row = fgetcsv($handle);
+        	if (!empty($row)) {
+        		$address_book[] = $row;
+        	}
+        }
+        return $address_book;    
+    }
+
+    function writeCSV($address_book) {
+        $handle = fopen($this->filename, 'w');
+        foreach ($address_book as $fields) {
+        	fputcsv($handle, $fields);
+        }
+        fclose($handle);
+    }
+
 }
 
 function checkPOST($post) {
@@ -44,18 +54,19 @@ function removeEntry($entryID, $array) {
 
 <?php
 
-	$address_book = readCSV();
+	// Create a new instance of AddressDataStore
+	$storeData = new AddressDataStore('./data/address-book.csv');
+	$address_book = $storeData->readCSV();
 	
 	if (checkPOST($_POST)) {
 		$address_book[] = $_POST;
-		writeCSV($address_book);
+		$storeData->writeCSV($address_book);
 	}
 
 	if (isset($_GET['remove'])) {
 	 	$address_book = removeEntry($_GET['remove'], $address_book);
-	 	writeCSV($address_book);
+	 	$storeData->writeCSV($address_book);
 	}
-
 
 
 ?>
@@ -82,7 +93,7 @@ function removeEntry($entryID, $array) {
 					<? foreach ($entry as $value) : ?>
 						<td><?= htmlspecialchars(strip_tags($value)) ?></td>
 					<? endforeach ?>
-					<td><?= "<a href='?remove={$key}'> Remove </a>" ?></td>
+					<td><?= "<a href=\"?remove={$key}\">" ?>Remove</a></td>
 				</tr>
 			<? endforeach ?>
 
