@@ -91,8 +91,23 @@ function checkMIME() {
 	<link href="./bootstrap/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-<hr>
-	<table class="table table-striped">
+<nav class="navbar navbar-default" role="navigation">
+	<div class="container-fluid">
+		<div class="navbar-header">
+			<p class="navbar-brand">Address Book</p>
+		</div>
+
+		<form class="navbar-form navbar-right" role="search">
+		  <div class="form-group">
+		    <input type="text" class="form-control" placeholder="Search">
+		  </div>
+		  <button type="submit" class="btn btn-default">Submit</button>
+		</form>
+
+	</div>
+</nav>
+
+	<table class="table table-hover">
 		<tr>
 			<th>First</th>
 			<th>Last</th>
@@ -115,33 +130,33 @@ function checkMIME() {
 	</table>
 
 <hr>
-	<!-- Add Entry Form														-->
-	<h3>Add Entry:</h3>
+	<div class="container">
+		<!-- Add Entry Form														-->
+		<h3>Add Entry:</h3>
 		<form method="POST" action="">
-		<p>
+			<p>
 			<label for="first_name">First</label>
 			<input id="first_name" name="first_name" type="text" placeholder="First Name">
-		</p>
-		<p>
+			
 			<label for="last_name">Last</label>
 			<input id="last_name" name="last_name" type="text" placeholder="Surname">
-		</p>
-		<p>
+			</p>
+
+			<p>
 			<label for="email">Email</label>
 			<input id="email" name="email" type="email" placeholder="Email">
-		</p>
-		<p>
+			
 			<label for="tel">Telephone</label>
 			<input id="tel" name="tel" type="" placeholder="#">
-		</p>
-		<p>
+			</p>
+
+			<p>
 			<label for="street_addr">Street Address</label>
 			<input id="street_addr" name="street_addr" type="text" placeholder="123 Anywhere Ln">
-		</p>
-		<p>
+			</p>
 			<label for="homepage">Homepage</label>
 			<input id="homepage" name="homepage" type="url" placeholder="http://example.com/">
-		</p>
+			
 			<button value="submit">Add</button>
 		</form>
 
@@ -154,7 +169,9 @@ function checkMIME() {
 				echo "<p style=color:orange;> {$GLOBALS['item_removed']} </p>";
 			} 
 		?>
+	</div>
 <hr>
+	<div class="container">
 		<!-- Upload File Form														-->
 		<h3>Upload File:</h3>
 			<form method="POST" enctype="multipart/form-data" action="">
@@ -172,6 +189,7 @@ function checkMIME() {
 					echo "<p style=color:blue;> {$GLOBALS['file_uploaded']} </p>";
 				} 
 			?>
+	</div>
 
 </body>
 </html>
