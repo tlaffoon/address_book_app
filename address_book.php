@@ -86,7 +86,7 @@ function checkMIME() {
 <html>
 <head>
 	<title>Address Book Web App</title>
-	<link href="./bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="./style.css" rel="stylesheet">
 </head>
 <body>
 <nav class="navbar navbar-default" role="navigation">
