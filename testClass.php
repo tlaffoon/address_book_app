@@ -1,6 +1,6 @@
 <?php
 
-require('../class/AddressDataStore.php');
+require('./includes/AddressDataStore.php');
 
 $addrObject = new AddressDataStore('../data/address-book.csv');
 
