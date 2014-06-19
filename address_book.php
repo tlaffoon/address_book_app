@@ -1,6 +1,6 @@
 <?php
 
-include('AddressDataStore.php');
+require('./includes/AddressDataStore.php');
 
 function checkPOST($post) {
 	// check captured post data for all fields completed.
@@ -24,10 +24,6 @@ function uploadFile() {
 	$filename = basename($_FILES['upload_file']['name']);
 	$saved_filename = $upload_dir . $filename;
 	move_uploaded_file($_FILES['upload_file']['tmp_name'], $saved_filename);
-
-	// if (isset($saved_filename)) {
-	//     $GLOBALS['file_uploaded']  = "<p>You can download your file <a href='/uploads/{$filename}'>here</a>.</p>";
-	// }
 }
 
 function checkUploadError() {
@@ -58,29 +54,31 @@ function checkMIME() {
 <?php
 
 	// Create a new instance of AddressDataStore
-	$storeData = new AddressDataStore('../data/address-book.csv');
-	$address_book = $storeData->readCSV();
+	$addrObject = new AddressDataStore('../data/address-book.csv');
+	//var_dump($addrObject->filename);
+	$address_book = $addrObject->read_address_book($addrObject->filename);
 	
 	if (checkPOST($_POST)) {
 		$address_book[] = $_POST;
-		$storeData->writeCSV($address_book);
+		$addrObject->write_address_book($address_book);
 	}
 
 	if (isset($_GET['remove'])) {
 	 	$address_book = removeEntry($_GET['remove'], $address_book);
-	 	$storeData->writeCSV($address_book);
+	 	$addrObject->write_address_book($address_book);
+	 	header('Location: http://addr.dev/');
 	}
 
 	if (count($_FILES) == 1) {
 		if (checkUploadError() == false && checkMIME() == true) {
 			uploadFile();
-			// var_dump($_FILES);
-			$storeData2 = new AddressDataStore("../data/{$_FILES['name']}");
-			$upload_array = $storeData2->readCSV(filename);
-			var_dump($upload_array);
+			var_dump($_FILES['upload_file']['name']);
+			$addrObject2 = new AddressDataStore("../data/{$_FILES['upload_file']['name']}");
+			$upload_array = $addrObject2->read_address_book($addrObject2->filename);
+			// var_dump($upload_array);
 			$address_book = array_merge($address_book, $upload_array);
-			var_dump($address_book);
-			$storeData->writeCSV($address_book);
+			// var_dump($address_book);
+			$addrObject->write_address_book($address_book);
 		}
 	}
 ?>
