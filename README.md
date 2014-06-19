@@ -1,7 +1,5 @@
-address_book_app
+Address Book Web App
 ================
-
-Address Book Web Application
 
   This is a simple web application demonstrating fundamental php skills, and possessing rudimentary functionality.  
   
