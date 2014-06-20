@@ -3,18 +3,6 @@
 // require_once('./includes/filestore.php');
 require_once('./includes/AddressDataStore.php');
 
-function checkPOST($post) {
-	// check captured post data for all fields completed.
-	if (!empty($post)) {
-		foreach ($post as $key => $value) {
-			if (!empty($post[$key]) && isset($post[$key])) {
-				return true;
-			} 
-		}
-	}
-	return false;
-}
-
 function removeEntry($entryID, $array) {
 	unset($array[$entryID]);
 	return array_values($array);
@@ -127,7 +115,7 @@ function checkMIME() {
 	<table class="table table-hover">
 		<tr>
 			<th>Name</th>
-			<th>Telephone</th>
+			<th>Phone</th>
 			<th>Email</th>
 			<th>Address</th>
 			<th>City</th>
@@ -151,40 +139,43 @@ function checkMIME() {
 	<div class="container">
 		<!-- Add Entry Form														-->
 		<h3>Add Entry:</h3>
-		<form method="POST" action="">
-			<p>
+		<form role="form" method="POST" action="">
+			<div class="form-group">			
 			<label for="name">Name</label>
-			<input id="name" name="name" type="text" placeholder="First Name">
-			</p>
+			<input class="form-control" id="name" name="name" type="text" placeholder="Name">
+			</div>
 
-			<p>
-			<label for="tel">Telephone</label>
-			<input id="tel" name="tel" type="" placeholder="#">
-			</p>
+			<div class="form-group">			
+			<label for="telephone">Phone</label>
+			<input class="form-control" id="telephone" name="telephone" type="" placeholder="#">
+			</div>
 
-			<p>
+			<div class="form-group">			
 			<label for="email">Email</label>
-			<input id="email" name="email" type="email" placeholder="user@domain.com">
-			</p>
+			<input class="form-control" id="email" name="email" class="form-control"type="email" placeholder="user@domain.com">
+			</div>
 
-			<p>
+			<div class="form-group">			
 			<label for="address">Address</label>
-			<input id="address" name="address" type="text" placeholder="123 Anywhere Ln">
-			</p>
+			<input class="form-control" id="address" name="address" type="text" placeholder="123 Anywhere Ln">
+			</div>
 
-			<p>
+			<div class="form-group">			
 			<label for="city">City</label>
-			<input id="city" name="city" type="text" placeholder="San Antonio">
-			</p>
+			<input class="form-control" id="city" name="city" type="text" placeholder="San Antonio">
+			</div>
 
-			<p>
+			<div class="form-group">			
 			<label for="state">State</label>
-			<input id="state" name="state" type="text" placeholder="">
-			</p>
+			<input class="form-control" id="state" name="state" type="text" placeholder="">
+			</div>
+
+			<div class="form-group">			
 			<label for="zip">Zip</label>
-			<input id="zip" name="zip" type="text" placeholder="78015">
-			
-			<button value="submit">Add</button>
+			<input class="form-control" id="zip" name="zip" type="text" placeholder="78015">
+			</div>
+
+			<button class="btn btn-default"value="submit">Add</button>
 		</form>
 
 		<?php  // If user feedback messages exist, output them.
@@ -201,10 +192,14 @@ function checkMIME() {
 	<div class="container">
 		<!-- Upload File Form														-->
 		<h3>Upload File:</h3>
-			<form method="POST" enctype="multipart/form-data" action="">
+			<form role="form" method="POST" enctype="multipart/form-data" action="">
+				<div class="form-group">			
 				<label for="upload_file">Upload File:</label>
-				<input id="upload_file" name="upload_file" type="file" placeholder="Choose file">
-				<button type="submit" value="Upload">UPLOAD</button>
+				<input class="form-control" id="upload_file" name="upload_file" type="file" placeholder="Choose file">
+				</div>
+				
+
+				<button class="btn btn-default" type="submit" value="Upload">UPLOAD</button>
 			</form>
 
 			
