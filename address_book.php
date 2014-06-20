@@ -64,6 +64,7 @@ function checkMIME() {
 
 	if (isset($_GET['remove'])) {
 	 	$address_book = removeEntry($_GET['remove'], $address_book);
+	 	//var_dump($address_book);
 	 	$addrObject->write($address_book);
 	 	header('Location: http://addr.dev/');
 	}
@@ -71,12 +72,12 @@ function checkMIME() {
 	if (count($_FILES) == 1) {
 		if (checkUploadError() == false && checkMIME() == true) {
 			uploadFile();
-			var_dump($_FILES['upload_file']['name']);
-			$addrObject2 = new AddressDataStore("../data/{$_FILES['upload_file']['name']}");
+			//var_dump($_FILES['upload_file']['name']);
+			$addrObject2 = new Filestore("../data/{$_FILES['upload_file']['name']}");
 			$upload_array = $addrObject2->read($addrObject2->filename);
 			// var_dump($upload_array);
 			$address_book = array_merge($address_book, $upload_array);
-			// var_dump($address_book);
+			//var_dump($address_book);
 			$addrObject->write($address_book);
 		}
 	}
