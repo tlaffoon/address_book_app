@@ -35,7 +35,7 @@ class Filestore {
     */
 
     public function write($array) {
-        if ($this->csv == true) {
+        if ($this->is_csv == true) {
             return $this->writeCSV($array);
         }
 
