@@ -3,6 +3,9 @@
 // require_once('./includes/filestore.php');
 require_once('./includes/AddressDataStore.php');
 
+class BlankInputException extends Exception { }
+class InvalidInputException extends Exception { }
+
 function removeEntry($entryID, $array) {
 	unset($array[$entryID]);
 	return array_values($array);
@@ -50,10 +53,10 @@ function checkMIME() {
 		try {
 			foreach ($_POST as $key => $value) {
 				if ($value == '') {
-					throw new Exception("Please enter " . ucfirst($key) . ".", 1);
+					throw new BlankInputException("Please enter " . ucfirst($key) . ".", 1);
 				}
 				if (strlen($value) > 125) {
-					throw new Exception(ucfirst($key) . "cannot exceed 125 characters.", 1);
+					throw new InvalidInputException(ucfirst($key) . "cannot exceed 125 characters.", 1);
 				}
 			}
 			// Add POST data to array
@@ -61,10 +64,12 @@ function checkMIME() {
 			// Write changes to file
 			$addrObject->write_address_book($address_book);
 		} 
-
-		catch (Exception $e) {
+		catch (BlankInputException $e) {
 			echo "<p style=\"margin-left:10px\">Exception: " . $e->getMessage() . "</p>";
-		}	
+		}
+		catch (InvalidInputException $e) {
+			echo "<p style=\"margin-left:10px\">Exception: " . $e->getMessage() . "</p>";
+		}
 	}
 
 
