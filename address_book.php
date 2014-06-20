@@ -46,21 +46,27 @@ function checkMIME() {
 	$address_book = $addrObject->read($addrObject->filename);
 	
 	// Checks for POST data and adds entry to address book
-	if (!empty($_POST)) {		
-		foreach ($_POST as $key => $value) {
-			// echo "<p>$key $value</p>";
-			if ($value == '') {
-				throw new Exception("Please enter " . ucfirst($key) . ".", 1);
+	if (!empty($_POST)) {
+		try {
+			foreach ($_POST as $key => $value) {
+				if ($value == '') {
+					throw new Exception("Please enter " . ucfirst($key) . ".", 1);
+				}
+				if (strlen($value) > 125) {
+					throw new Exception(ucfirst($key) . "cannot exceed 125 characters.", 1);
+				}
 			}
-			if (strlen($value) > 125) {
-				throw new Exception(ucfirst($key) . "cannot exceed 125 characters.", 1);
-			}
-		}
-	// Add POST data to array
-	$address_book[] = $_POST;
-	// 	// Write changes to file
-	$addrObject->write_address_book($address_book);
+			// Add POST data to array
+			$address_book[] = $_POST;
+			// Write changes to file
+			$addrObject->write_address_book($address_book);
+		} 
+
+		catch (Exception $e) {
+			echo "<p style=\"margin-left:10px\">Exception: " . $e->getMessage() . "</p>";
+		}	
 	}
+
 
 	// Checks for GET request and removes corresponding entry
 	if (isset($_GET['remove'])) {
