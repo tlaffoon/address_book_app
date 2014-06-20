@@ -47,7 +47,6 @@ function checkMIME() {
 // Add Sort
 // Add Dedupe
 // Add Search
-// Add Upload
 
 ?>
 
@@ -57,27 +56,37 @@ function checkMIME() {
 	$addrObject = new Filestore('../data/address-book.csv');
 	$address_book = $addrObject->read($addrObject->filename);
 	
+	// Checks for POST data and adds entry to address book
 	if (checkPOST($_POST)) {
+		// Add POST data to array
 		$address_book[] = $_POST;
+		// Write changes to file
 		$addrObject->write($address_book);
 	}
-
+	// Checks for GET request and removes corresponding entry
 	if (isset($_GET['remove'])) {
+		// Remove entry from address book array
 	 	$address_book = removeEntry($_GET['remove'], $address_book);
-	 	//var_dump($address_book);
+	 	// Write changes to file
 	 	$addrObject->write($address_book);
+	 	// Redirect to main index.php
 	 	header('Location: http://addr.dev/');
 	}
 
+	// Checks for uploaded files and processes accordingly
+
 	if (count($_FILES) == 1) {
+		// Runs sanity check functions located above
 		if (checkUploadError() == false && checkMIME() == true) {
+			// Runs local upload file function
 			uploadFile();
-			//var_dump($_FILES['upload_file']['name']);
+			// Create additional object using Filestore class
 			$addrObject2 = new Filestore("../data/{$_FILES['upload_file']['name']}");
+			// Create new array to merge with existing address book 
 			$upload_array = $addrObject2->read($addrObject2->filename);
-			// var_dump($upload_array);
+			// Merge
 			$address_book = array_merge($address_book, $upload_array);
-			//var_dump($address_book);
+			// Write changes to file
 			$addrObject->write($address_book);
 		}
 	}
@@ -108,7 +117,6 @@ function checkMIME() {
 	<table class="table table-hover">
 		<tr>
 			<th>First</th>
-
 			<th>Last</th>
 			<th>Email</th>
 			<th>Telephone</th>
