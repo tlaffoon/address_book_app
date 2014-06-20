@@ -1,6 +1,7 @@
 <?php
 
-require('./includes/filestore.php');
+// require_once('./includes/filestore.php');
+require_once('./includes/AddressDataStore.php');
 
 function checkPOST($post) {
 	// check captured post data for all fields completed.
@@ -53,41 +54,50 @@ function checkMIME() {
 <?php
 
 	// Create a new instance of AddressDataStore
-	$addrObject = new Filestore('../data/address-book.csv');
+	$addrObject = new AddressDataStore('../data/address-book.csv');
 	$address_book = $addrObject->read($addrObject->filename);
 	
 	// Checks for POST data and adds entry to address book
-	if (checkPOST($_POST)) {
-		// Add POST data to array
-		$address_book[] = $_POST;
-		// Write changes to file
-		$addrObject->write($address_book);
+	if (!empty($_POST)) {		
+		foreach ($_POST as $key => $value) {
+			// echo "<p>$key $value</p>";
+			if ($value == '') {
+				throw new Exception("Please enter " . ucfirst($key) . ".", 1);
+			}
+			if (strlen($value) > 125) {
+				throw new Exception(ucfirst($key) . "cannot exceed 125 characters.", 1);
+			}
+		}
+	// Add POST data to array
+	$address_book[] = $_POST;
+	// 	// Write changes to file
+	$addrObject->write_address_book($address_book);
 	}
+
 	// Checks for GET request and removes corresponding entry
 	if (isset($_GET['remove'])) {
 		// Remove entry from address book array
 	 	$address_book = removeEntry($_GET['remove'], $address_book);
 	 	// Write changes to file
-	 	$addrObject->write($address_book);
+	 	$addrObject->write_address_book($address_book);
 	 	// Redirect to main index.php
 	 	header('Location: http://addr.dev/');
 	}
 
 	// Checks for uploaded files and processes accordingly
-
 	if (count($_FILES) == 1) {
 		// Runs sanity check functions located above
 		if (checkUploadError() == false && checkMIME() == true) {
 			// Runs local upload file function
 			uploadFile();
 			// Create additional object using Filestore class
-			$addrObject2 = new Filestore("../data/{$_FILES['upload_file']['name']}");
+			$addrObject2 = new AddressDataStore("../data/{$_FILES['upload_file']['name']}");
 			// Create new array to merge with existing address book 
-			$upload_array = $addrObject2->read($addrObject2->filename);
+			$upload_array = $addrObject2->read_address_book($addrObject2->filename);
 			// Merge
 			$address_book = array_merge($address_book, $upload_array);
 			// Write changes to file
-			$addrObject->write($address_book);
+			$addrObject->write_address_book($address_book);
 		}
 	}
 ?>
@@ -116,12 +126,13 @@ function checkMIME() {
 
 	<table class="table table-hover">
 		<tr>
-			<th>First</th>
-			<th>Last</th>
-			<th>Email</th>
+			<th>Name</th>
 			<th>Telephone</th>
+			<th>Email</th>
 			<th>Address</th>
-			<th>Homepage</th>
+			<th>City</th>
+			<th>State</th>
+			<th>Zip</th>
 			<th>Remove?</th>
 		</tr>
 
@@ -142,27 +153,36 @@ function checkMIME() {
 		<h3>Add Entry:</h3>
 		<form method="POST" action="">
 			<p>
-			<label for="first_name">First</label>
-			<input id="first_name" name="first_name" type="text" placeholder="First Name">
-			
-			<label for="last_name">Last</label>
-			<input id="last_name" name="last_name" type="text" placeholder="Last Name">
+			<label for="name">Name</label>
+			<input id="name" name="name" type="text" placeholder="First Name">
 			</p>
 
 			<p>
-			<label for="email">Email</label>
-			<input id="email" name="email" type="email" placeholder="Email">
-			
 			<label for="tel">Telephone</label>
 			<input id="tel" name="tel" type="" placeholder="#">
 			</p>
 
 			<p>
-			<label for="street_addr">Street Address</label>
-			<input id="street_addr" name="street_addr" type="text" placeholder="123 Anywhere Ln">
+			<label for="email">Email</label>
+			<input id="email" name="email" type="email" placeholder="user@domain.com">
 			</p>
-			<label for="homepage">Homepage</label>
-			<input id="homepage" name="homepage" type="url" placeholder="http://example.com/">
+
+			<p>
+			<label for="address">Address</label>
+			<input id="address" name="address" type="text" placeholder="123 Anywhere Ln">
+			</p>
+
+			<p>
+			<label for="city">City</label>
+			<input id="city" name="city" type="text" placeholder="San Antonio">
+			</p>
+
+			<p>
+			<label for="state">State</label>
+			<input id="state" name="state" type="text" placeholder="">
+			</p>
+			<label for="zip">Zip</label>
+			<input id="zip" name="zip" type="text" placeholder="78015">
 			
 			<button value="submit">Add</button>
 		</form>
