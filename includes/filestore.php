@@ -3,17 +3,51 @@
 class Filestore {
 
     public $filename = '';
+    private $is_csv = '';
 
-    function __construct($filename = '') 
-    {
+    function __construct($filename = '') {
         // Sets $this->filename
         $this->filename = $filename;
+
+        // Determines if csv or not
+        if (substr($this->filename, -3) == 'csv') {
+            $this->is_csv = true;
+        }
+    }
+
+    /**
+    *  Reads file
+    */
+
+    public function read() {
+
+        if ($this->is_csv == true) {
+            return $this->readCSV($this->filename);
+        }
+
+        else {
+            return $this->readTXT($this->filename);
+        }
+    }
+
+    /**
+    *  Writes file
+    */
+
+    public function write($array) {
+        if ($this->csv == true) {
+            return $this->writeCSV($array);
+        }
+
+        else {
+            return $this->writeTXT($array);
+        }
     }
 
     /**
      * Returns array of lines in $this->filename
      */
-    function readTXT($filename) {
+    private function readTXT($filename) {
         $handle = fopen($filename, 'r');
             if (filesize($filename) > 0) {
                 $contents = trim(fread($handle, filesize($filename)));
@@ -25,13 +59,12 @@ class Filestore {
             else 
                 $lines = [];
                     return $lines;
-
-        }
+    }
 
     /**
      * Writes each element in $array to a new line in $this->filename
      */
-    function writeTXT($array) {
+    private function writeTXT($array) {
         $handle = fopen($this->filename, 'w');
         $string = '';
 
@@ -46,7 +79,7 @@ class Filestore {
     /**
      * Reads contents of csv $this->filename, returns an array
      */
-    function readCSV()
+    private function readCSV()
     {
         $array = [];
         $handle = fopen($this->filename, 'r');
@@ -62,7 +95,7 @@ class Filestore {
     /**
      * Writes contents of $array to csv $this->filename
      */
-    function writeCSV($array) {
+    private function writeCSV($array) {
         $handle = fopen($this->filename, 'w');
         foreach ($array as $fields) {
             fputcsv($handle, $fields);
