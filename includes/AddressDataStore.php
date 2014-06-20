@@ -1,8 +1,6 @@
 <?php 
 
-// TODO: require Filestore class
 require('filestore.php');
-
 
 class AddressDataStore extends Filestore {
 
@@ -13,16 +11,16 @@ class AddressDataStore extends Filestore {
         parent::__construct($filename);
     }
 
-    function read_address_book()
+    public function read_address_book()
     {
-        return $this->readCSV();
+        return $this->read();
     }
 
-    function write_address_book($array) 
+    public function write_address_book($array) 
     {
-        return $this->writeCSV($array);
+        return $this->write($array);
     }
-
+    
 }
 
 ?>
