@@ -1,60 +1,90 @@
 <?php
 
+// Add in-line editing for fields displayed in address book
+
 require('dbc.php');
 
-function getContactName($dbc, $contact_id) {
-    $query = 'SELECT contact_name FROM contacts WHERE id = :id';
-    $stmt = $dbc->prepare($query);
-    $stmt->bindValue(':id', $contact_id, PDO::PARAM_STR);
-    return $stmt->execute();
-}
-
-function getContactAddresses($dbc, $contact_id, $addrPerPage, $offset) {
-    return $dbc->query("SELECT * FROM addresses")->fetchAll(PDO::FETCH_ASSOC);
-}
-
 function getAllExistingAddress($dbc) {
-    return $dbc->query("SELECT * FROM addresses")->fetchAll(PDO::FETCH_ASSOC);
-}
+    return $dbc->query("SELECT * FROM addresses;")->fetchAll(PDO::FETCH_ASSOC);
+};
 
 function countAddresses($dbc) {
-	return $dbc->query('SELECT COUNT(*) FROM addresses')->fetchColumn();
-}
+	return $dbc->query('SELECT COUNT(*) FROM addresses;')->fetchColumn();
+};
+
+// Needs to have $contact_id sanitized with query prepare, keep getting syntax error.
+function getContactName($dbc, $contact_id) {
+    $query = "SELECT name FROM contacts WHERE id = $contact_id;";
+    //$stmt = $dbc->prepare($query);
+    //$stmt->bindValue(':id', $contact_id, PDO::PARAM_STR);
+    //return $stmt->execute();
+    return $dbc->query($query)->fetch(PDO::FETCH_ASSOC);
+};
+
+// Needs to have $contact_id sanitized with query prepare, keep getting syntax error.
+function getContactAddresses($dbc, $contact_id, $addrPerPage, $offset) {
+	$query = "SELECT a.id, a.street, a.city, a.zip, a.state
+				FROM contacts_addresses ca
+				JOIN contacts c on c.id = ca.contact_id
+				JOIN addresses a on a.id = ca.address_id
+				WHERE c.id = $contact_id;";
+				// -- LIMIT :limit 
+				// -- OFFSET :offset
+
+	//$stmt = $dbc->prepare($query);
+	//$stmt->bindValue(':id', $contact_id, PDO::PARAM_STR);
+	//$stmt->bindValue(':limit', $addrPerPage, PDO::PARAM_STR);
+	//$stmt->bindValue(':offset', $offset, PDO::PARAM_STR);
+    return $dbc->query($query)->fetchAll(PDO::FETCH_ASSOC); // ->fetchAll(PDO::FETCH_ASSOC);
+};
 
 function insertAddress($dbc, $street, $city, $state, $zip) {
-	$query = 'INSERT INTO addresses (street, city, state, zip) VALUES (:street, :city, :state, :zip);';
+	$query = "INSERT INTO addresses (street, city, state, zip) VALUES (:street, :city, :state, :zip);";
 	$stmt = $dbc->prepare($query);
 	$stmt->bindValue(':street', $street, PDO::PARAM_STR);
 	$stmt->bindValue(':city', $city, PDO::PARAM_STR);
 	$stmt->bindValue(':state', $state, PDO::PARAM_STR);
 	$stmt->bindValue(':zip', $zip, PDO::PARAM_INT);
 	$stmt->execute();
-	// return "<p>Inserted ID: " . $dbc->lastInsertId() . "</p>";
-}
+	return "<p>Inserted ID: " . $dbc->lastInsertId() . "</p>";
+};
 
-function detachAddress($dbc, $address_id, $contact_id) {
-	$query = 'DELETE FROM map WHERE ... ';
+function attachAddress($dbc, $contact_id, $address_id) {
+	$query = "INSERT INTO contacts_addresses (contact_id, address_id) VALUES (:contact_id, :address_id);";
 	$stmt = $dbc->prepare($query);
-	$stmt->bindValue(':address_id', $address_id, PDO::PARAM_STR);
-	$stmt->bindValue(':contact_id', $contact_id, PDO::PARAM_STR);
+	$stmt->bindValue(':contact_id', $contact_id, PDO::PARAM_INT);
+	$stmt->bindValue(':address_id', $address_id, PDO::PARAM_INT);
 	$stmt->execute();
-}
+};
+
+
+function detachAddress($dbc, $contact_id, $address_id) {
+	$query = 'DELETE FROM contacts_addresses WHERE contact_id = :contact_id AND address_id = :address_id;';
+	$stmt = $dbc->prepare($query);
+	$stmt->bindValue(':contact_id', $contact_id, PDO::PARAM_INT);
+	$stmt->bindValue(':address_id', $address_id, PDO::PARAM_INT);
+	$stmt->execute();
+};
 
 function deleteAddress($dbc, $address_id) {
-	$query = 'DELETE FROM addresses WHERE id = :id';
+	$query = 'DELETE FROM addresses WHERE id = :address_id';
 	$stmt = $dbc->prepare($query);
-	$stmt->bindValue(':id', $address_id, PDO::PARAM_STR);
+	$stmt->bindValue(':address_id', $address_id, PDO::PARAM_INT);
 	$stmt->execute();
-}
 
-$addrPerPage = 5;
-// 
+	// This query fails for some reason.
+	// $query2 = 'DELETE FROM contacts_addresses WHERE address_id = :id';
+	// $stmt = $dbc->prepare($query2);
+	// $stmt->bindValue(':address_id', $address_id, PDO::PARAM_INT);
+	// $stmt->execute();
+};
+
+$pageID = '1';  // Default Value
+$addrPerPage = '5';  // Default Value
 $maxPages = ceil(countAddresses($dbc) / $addrPerPage);
 
-// Check and process GET 
-
+// Check and process GET
 if (!empty($_GET)) {
-
 	// var_dump($_GET);
 
 	if (isset($_GET['page'])) {
@@ -62,7 +92,6 @@ if (!empty($_GET)) {
 	}
 
 	else {
-		$pageID = 1;
 	}
 	
 	$offset = ($pageID * $addrPerPage) - $addrPerPage;
@@ -75,9 +104,8 @@ if (!empty($_GET)) {
 }
 
 else {
-	$pageID = 1;
 	$offset = ($pageID * $addrPerPage) - $addrPerPage;
-	$contactName = 'Default';
+	$contactName = array('name' => 'Default');
 	$contactAddresses = array();
 }
 
@@ -85,33 +113,36 @@ else {
 $dropdownAddresses = getAllExistingAddress($dbc);
 
 // Check and process POST
-
 if (!empty($_POST)) {
-	// var_dump($_POST);
 
 	if (isset($_POST['delete_id'])) {
-		$delete_id = $_POST['delete_id'];
-		deleteAddress($dbc, $delete_id);
-		header('Location: http://addr.dev/contact_addresses.php');
+		$address_id = $_POST['delete_id'];
+		deleteAddress($dbc, $address_id);
+		header('Location: http://addr.dev/contact_addresses.php?contact_id=' . $contact_id);
+	}
+
+	if (isset($_POST['attach_id'])) {
+		$address_id = $_POST['attach_id'];
+		attachAddress($dbc, $contact_id, $address_id);
+		header('Location: http://addr.dev/contact_addresses.php?contact_id=' . $contact_id);
 	}
 
 	if (isset($_POST['detach_id'])) {
-		$detach_id = $_POST['detach_id'];
-		//$contact_id = 
-		detachAddress($dbc, $detach_id, $contact_id);
-		header('Location: http://addr.dev/contact_addresses.php');
+		$address_id = $_POST['detach_id'];
+		echo $address_id;
+		detachAddress($dbc, $contact_id, $address_id);
+		header('Location: http://addr.dev/contact_addresses.php?contact_id=' . $contact_id);
 	}
 
-	if (isset($street) && isset($city) && isset($state) && isset($zip)) {
-		$street = $_POST['street'];
-		$city = $_POST['city'];
-		$state = $_POST['state'];
+	// need try/catch for input validation.
+	if (isset($_POST['street']) && isset($_POST['city']) && isset($_POST['state']) && isset($_POST['zip'])) {
+		$street = ucwords($_POST['street']);
+		$city = ucwords($_POST['city']);
+		$state = ucfirst($_POST['state']);  // need to uppercase all and change to two letter abbrev.
 		$zip = $_POST['zip'];
 
-		// need try/catch for input validation.
-
 		insertAddress($dbc, $street, $city, $state, $zip);
-		header('Location: http://addr.dev/contact_addresses.php');
+		header('Location: http://addr.dev/contact_addresses.php?contact_id=' . $contact_id);
 	}
 }
 
@@ -120,10 +151,11 @@ if (!empty($_POST)) {
 <html>
 <head>
 	<title>Address Book: Contact Addresses</title>
-	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+	<link rel="stylesheet" href="./bootstrap/css/bootstrap.css">
 	<style type="text/css">
 	.zero-pad {
 		padding-left: 0px;
+		padding-right: 0px;
 	}
 	</style>
 </head>
@@ -132,7 +164,7 @@ if (!empty($_POST)) {
 <div class="container">
 
 	<h1>
-		Address for Contact: <?= $contactName ?>
+		Address for Contact: <?= $contactName['name'] ?>
 		<a href="http://addr.dev/" class="btn btn-default pull-right">Back to Contacts</a>
 	</h1>
 
@@ -152,13 +184,11 @@ if (!empty($_POST)) {
 				<td><?= $contactAddress['state'] ?></td>
 				<td><?= $contactAddress['zip'] ?></td>
 				<td>
-					<button class="btn btn-small btn-info btn-detach" data-detach="<? // $contactAddress['id'] ?>">Detach</button>
+					<button class="btn btn-small btn-warning btn-detach" data-detach="<?= $contactAddress['id'] ?>">Detach</button>
 				</td>
 			</tr>
 		<?php endforeach ?>
 	</table>
-
-	<hr>
 
 	<div class="col-md-6 zero-pad">
 		<h4>Attach Existing Address</h4>
@@ -166,11 +196,11 @@ if (!empty($_POST)) {
 			<div class="form-group">
 				<select class="form-control" name="attach_id">
 					<?php foreach ($dropdownAddresses as $address): ?>
-						<option value="<?= $address['id'] ?>"> <?= "{$address['street']} {$address['city']}, {$address['state']} {$address['zip']}"  ?> </option>
+						<option value="<?= $address['id'] ?>"> <?= "{$address['street']} - {$address['city']}, {$address['state']} {$address['zip']}"  ?></option>
 					<?php endforeach ?>
 				</select>
 			</div>
-			<button type="submit" class="btn btn-default btn-info" data-attach="<?= $address['id']?>">Attach</button>
+			<button type="submit" class="btn btn-info btn-attach" data-attach="<?= $address['id']?>">Attach</button>
 		</form>
 	</div>
 
@@ -180,11 +210,11 @@ if (!empty($_POST)) {
 			<div class="form-group">
 				<select class="form-control" name="delete_id">
 					<?php foreach ($dropdownAddresses as $address): ?>
-						<option value="<?= $address['id'] ?>"> <?= "{$address['street']} {$address['city']}, {$address['state']} {$address['zip']}"  ?> </option>
+						<option value="<?= $address['id'] ?>"> <?= "{$address['street']} - {$address['city']}, {$address['state']} {$address['zip']}"  ?></option>
 					<?php endforeach ?>
 				</select>
 			</div>
-			<button type="submit" class="btn btn-danger btn-success btn-delete" data-delete="<?= $address['id'] ?>">Delete</button>
+			<button type="submit" class="btn btn-danger btn-delete" data-delete="<?= $address['id'] ?>">Delete</button>
 		</form>
 	</div>
 
@@ -211,13 +241,18 @@ if (!empty($_POST)) {
 		<button type="submit" class="btn btn-default btn-success">Add</button>
 	</form>
 
+	<!-- Attach Address Form -->
+	<form id="attach-form" action="" method="post">
+		<input id="attach-id" name="attach" type="hidden" value="">
+	</form>
+
 	<!-- Detach Address Form -->
-	<form id="detach-form" action="contact_addresses.php" method="post">
+	<form id="detach-form" action="" method="post">
 		<input id="detach-id" name="detach" type="hidden" value="">
 	</form>
 	
 	<!-- Delete Address Form -->
-	<form id="delete-form" action="contact_addresses.php" method="post">
+	<form id="delete-form" action="" method="post">
 		<input id="delete-id" name="delete" type="hidden" value="">
 	</form>
 
@@ -225,33 +260,33 @@ if (!empty($_POST)) {
 
 
 <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
- <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 <script>
+	console.log('Document Loaded.');
 
-$('document').ready({
+	$('.btn-attach').click(function () {
+		var addressId = $(this).data('attach');
+			$('#attach-id').val(addressId);
+			$('#attach-form').submit();
+	});
 
 	$('.btn-detach').click(function () {
-		var addressId = $(this).data('address');
-		//if (confirm('Are you sure you want to detach address ' + addressId + '?')) {
-			//$('#detach-id').val(addressId); // alter to dissociate address from current contact, rather than delete
-			//$('#detach-form').submit();
-		//}
+		var addressId = $(this).data('detach');
+			$('#detach-id').val(addressId);
+			$('#detach-form').submit();
 	});
 
 	$('.btn-delete').click(function () {
-		var addressId = $(this).data('address');
+		var addressId = $(this).data('delete');
 		if (confirm('Are you sure you want to remove address ' + addressId + '?')) {
-			$('#delete-id').val(addressId); // alter to dissociate address from current contact, rather than delete
+			$('#delete-id').val(addressId);
 			$('#delete-form').submit();
 		}
+
+		else {
+			// redirect to current contact_id page without executing delete query
+		}
 	});
-
-
-
-});
-
-
-
 </script>
 
 </body>
